@@ -3,44 +3,59 @@ import re
 import getopt
 import sys
 import threadpool
+import urllib.parse
 import urllib.request
 #!/usr/bin/python3
-import hashlib
-import urllib3
 import ssl
+from urllib.error import HTTPError,URLError
+import time
 ssl._create_default_https_context = ssl._create_stdlib_context
 
 
+headers={
+'Host': 'baidurank.aizhan.com',
+'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36',
+'Sec-Fetch-Dest': 'document',
+'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+'Cookie': ''
+}
+
 
 def getPc(domain):
+    aizhan_pc = 'https://baidurank.aizhan.com/api/br?domain={}&style=text'.format(domain)
     try:
- 
 
-        aizhan_pc = 'https://baidurank.aizhan.com/api/br?domain={}&style=text'.format(domain)
-        # b = requests.post(url=post_url,headers=headers, proxies=proxy, timeout = 7)
-        res = urllib.request.urlopen(aizhan_pc,timeout=10)
-        # res = opener.open(aizhan_pc,timeout=10)
-        a = res.read().decode('UTF-8')
+        req = urllib.request.Request(aizhan_pc, headers=headers)
+        response = urllib.request.urlopen(req,timeout=10)
+        b = response.read()
+        a = b.decode("utf8")
         result_pc = re.findall(re.compile(r'>(.*?)</a>'),a)
         pc = result_pc[0]
-    except Exception as u:
-        print(u)
-        pc = '0'
+        
+    except HTTPError as u:
+        time.sleep(3)
+        return getPc(domain)
+
     return pc
 
 def getMobile(domain):
+    aizhan_pc = 'https://baidurank.aizhan.com/api/mbr?domain={}&style=text'.format(domain)
     try:
-
-        aizhan_pc = 'https://baidurank.aizhan.com/api/mbr?domain={}&style=text'.format(domain)
         # b = requests.post(url=post_url,headers=headers, proxies=proxy, timeout = 7)
-        res = urllib.request.urlopen(aizhan_pc,timeout=10)
-        # res = opener.open(aizhan_pc,timeout=10)
-        a = res.read().decode('UTF-8')
+        # res = urllib.request.urlopen(aizhan_pc,timeout=10)
+        # # res = opener.open(aizhan_pc,timeout=10)
+        # a = res.read().decode('UTF-8')
+        req = urllib.request.Request(aizhan_pc, headers=headers)
+        response = urllib.request.urlopen(req,timeout=10)
+        b = response.read()
+        a = b.decode("utf8")
         result_m = re.findall(re.compile(r'>(.*?)</a>'),a)
         mobile = result_m[0]
-    except Exception as u:
-        print(u)
-        mobile = '0'
+    except HTTPError as u:
+        time.sleep(3)
+        return getMobile(domain)
+
+
     return mobile
 # 权重查询
 def seo(name,url):
@@ -51,7 +66,7 @@ def seo(name,url):
         result_mobile = getMobile(name)
 
     except Exception as u:
-        print(u)
+        # print(u)
         result_pc = '0'
         result_mobile = '0'
 
